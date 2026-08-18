@@ -131,52 +131,70 @@ std::pair<float,float> newVelocity={0,0};
 
 void streaming(std::vector<std::vector<std::vector<float>>>& OriginalGrid){
     std::vector<std::vector<std::vector<float>>> CopyGrid=OriginalGrid;
-    //top-bottom
     for (int x=0;x<gridSize.first;x++){
         for (int y=0;y<gridSize.second;y++){
-        if (y==0 || x==0 || y==gridSize.second-1){
-            if (y==0){
-                OriginalGrid[x][y][2]+=CopyGrid[x][y][8];
-                OriginalGrid[x][y][8]=0;
-                OriginalGrid[x][y][3]+=CopyGrid[x][y][7];
-                OriginalGrid[x][y][7]=0;
-                OriginalGrid[x][y][4]+=CopyGrid[x][y][6];
-                OriginalGrid[x][y][6]=0;
-            }
-            else if (y==gridSize.second-1){
-                OriginalGrid[x][y][8]+=CopyGrid[x][y][2];
-                OriginalGrid[x][y][2]=0;
-                OriginalGrid[x][y][7]+=CopyGrid[x][y][3];
-                OriginalGrid[x][y][3]=0;
-                OriginalGrid[x][y][6]+=CopyGrid[x][y][4];
-                OriginalGrid[x][y][4]=0;
-            };
             if (x==0){
-                OriginalGrid[x][y][8]+=CopyGrid[x][y][6];
-                OriginalGrid[x][y][6]=0;
-                OriginalGrid[x][y][1]+=CopyGrid[x][y][5];
-                OriginalGrid[x][y][5]=0;
-                OriginalGrid[x][y][2]+=CopyGrid[x][y][4];
-                OriginalGrid[x][y][4]=0;
-            }
-            else if (x==gridSize.first-1){
-                OriginalGrid[x][y][6]=weights[6];
-                OriginalGrid[x][y][5]=weights[5];
-                OriginalGrid[x][y][4]=weights[4];
-            };}
-        else{
-            OriginalGrid[x][y][1]=CopyGrid[x-1][y][1];
-            OriginalGrid[x][y][2]=CopyGrid[x-1][y-1][2];
-            OriginalGrid[x][y][3]=CopyGrid[x][y-1][3];
-            OriginalGrid[x][y][4]=CopyGrid[x+1][y-1][4];
+                OriginalGrid[x][y][1]=CopyGrid[x][y][5];//left wall hit
+            }else{
+                OriginalGrid[x][y][1]=CopyGrid[x-1][y][1];
+            };
+
+            if (x==0 && y==0){
+                OriginalGrid[x][y][2]=CopyGrid[x][y][6];//left-top corner hit
+            }else if (x==0){
+                OriginalGrid[x][y][2]=CopyGrid[x][y][4];//left wall hit
+            }else if (y==0){
+                OriginalGrid[x][y][2]=CopyGrid[x][y][8];//top wall hit
+            }else{
+                OriginalGrid[x][y][2]=CopyGrid[x-1][y-1][2];
+            };
+            
+            if (y==0){
+                OriginalGrid[x][y][3]=CopyGrid[x][y][7];//top wall hit
+            }else{
+                OriginalGrid[x][y][3]=CopyGrid[x][y-1][3];
+            };
+            
+            if (y==0){
+                OriginalGrid[x][y][4]=CopyGrid[x][y][6];//top wall hit
+            }else if (x==gridSize.first-1){
+                OriginalGrid[x][y][4]=weights[4]; //right hole hit
+            }else{
+                OriginalGrid[x][y][4]=CopyGrid[x+1][y-1][4];
+            };
+
+            if (x==gridSize.first-1){
+                OriginalGrid[x][y][5]=weights[5]; //right hole hit
+            }else{
             OriginalGrid[x][y][5]=CopyGrid[x+1][y][5];
-            OriginalGrid[x][y][6]=CopyGrid[x+1][y+1][6];
-            OriginalGrid[x][y][7]=CopyGrid[x][y+1][7];
-            OriginalGrid[x][y][8]=CopyGrid[x-1][y+1][8];
-        };
+            };
+            
+            if (y==gridSize.second-1){
+                OriginalGrid[x][y][6]=CopyGrid[x][y][4]; //bottom wall hit
+            }else if (x==gridSize.first-1){
+                OriginalGrid[x][y][6]=weights[6]; //right hole hit
+            }else{
+                OriginalGrid[x][y][6]=CopyGrid[x+1][y+1][6];
+            };
+            
+            if (y==gridSize.second-1){
+                OriginalGrid[x][y][7]=CopyGrid[x][y][3]; //bottom wall hit
+            }else{
+                OriginalGrid[x][y][7]=CopyGrid[x][y+1][7];
+            };
+            
+            if (x==0 && y==0){
+                OriginalGrid[x][y][8]=CopyGrid[x][y][4];//left-bottom corner hit
+            }else if (x==0){
+                OriginalGrid[x][y][8]=CopyGrid[x][y][6];//left wall hit
+            }else if (y==gridSize.second-1){
+                OriginalGrid[x][y][8]=CopyGrid[x][y][2]; //bottom wall hit
+            }else{
+                OriginalGrid[x][y][8]=CopyGrid[x-1][y+1][8];
             };
         };
     };
+};
 
 std::pair<float,float> velocityCalc(std::vector<float> cell){
     //add velocity calculator here.
