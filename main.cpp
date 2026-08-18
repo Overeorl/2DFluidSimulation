@@ -9,14 +9,18 @@
 
 //-------------------------//
 
+//Can change
 int PARTICLES = 100;
-bool started = false;
 float DENSITY = 1;
 std::pair<float,float> startVelocity = {0.1,0};
 
 
+bool started = false;
+
+//Declatation
+void streaming(std::vector<std::vector<std::vector<float>>>&);
 std::pair<float,float> velocityCalc(std::vector<float>);
-std::vector<float> eqFormula(std::vector<float>,float,std::vector<std::pair<float,float>>,std::pair<float,float>);
+std::vector<float> eqFormula(std::pair<float,float> velocity);
 float dotCalc(std::pair<float,float> num1,std::pair<float,float> num2);
 std::pair<int,int> gridPosCalculator(int,int);
 void updateLeft(std::pair<float,float>,std::vector<std::vector<std::vector<float>>>&);
@@ -25,10 +29,11 @@ void updateGrid(std::vector<std::vector<std::vector<float>>>&);
 std::pair<int,int> WindowSize = {1200,1200};//x,y
 std::pair<int,int> gridSize = {240,0};//x,y
 
+std::vector<std::pair<float,float>> directions = {{0,0},{1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1}};
+    std::vector<float> weights = {4.0/9,1.0/9,1.0/36,1.0/9,1.0/36,1.0/9,1.0/36,1.0/9,1.0/36};
+
+
 int main(){
-    //Can change
-
-
     sf::RenderWindow window(sf::VideoMode(WindowSize.first,WindowSize.second), "2D Sim");
     
     gridSize.second=gridSize.first*(WindowSize.second/WindowSize.first);
@@ -54,18 +59,23 @@ int main(){
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed) {
                 window.close();
+            };
+
+        if (event.type==sf::Event::KeyPressed){
             if (event.key.code == sf::Keyboard::Key::Space){
                 if (!started){
-                    updateLeft(startVelocity,grid);
+                    started = true;
                 }
-                else if (started){
+                else{
                     updateLeft({0,0},grid);
+                    started = false;
                 };
             };
-            };
         };
+    };
 
         //add here later
+        if (started){updateLeft(startVelocity,grid);};
 
 
         window.clear();
@@ -75,13 +85,6 @@ int main(){
 };
 
 std::vector<float> eqFormula(std::pair<float,float> velocity){
-
-    std::vector<std::pair<float,float>> directions(9);
-    directions={{0,0},{1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1}};
-    std::vector<float> weights(9);
-    weights={4.0/9,1.0/9,1.0/36,1.0/9,1.0/36,1.0/9,1.0/36,1.0/9,1.0/36};
-
-
     std::vector<float> f_eq(9);
     for (int i=0;i<=8;i++){
         f_eq[i] = weights[i] * DENSITY * (1+3*dotCalc(directions[i],velocity)+4.5*(dotCalc(directions[i],velocity))*(dotCalc(directions[i],velocity))-1.5*(dotCalc(velocity,velocity)));
@@ -108,23 +111,88 @@ void updateLeft(std::pair<float,float> NewVelocity,std::vector<std::vector<std::
     updateGrid(Grid);
 };
 
-void updateGrid(std::vector<std::vector<std::vector<float>>>& Grid){
+void updateGrid(std::vector<std::vector<std::vector<float>>>& OriginalGrid){
 //if started dont do first row
 //if stopped do 0 and treat left wall as a collision - dissipate from right until pressure is at normal levels 1 atm
+
 int startx = 0;
 std::pair<float,float> newVelocity={0,0};
     if (started){
         startx = 1;
     };
     for (int x=startx;x<gridSize.first;x++){
-        for (int y=startx;y<gridSize.second;y++){
-            newVelocity=velocityCalc(Grid[x][y]);
-            Grid[x][y]=eqFormula(newVelocity);
+        for (int y=0;y<gridSize.second;y++){
+            newVelocity=velocityCalc(OriginalGrid[x][y]);
+            OriginalGrid[x][y]=eqFormula(newVelocity);
+        };
+    };
+    streaming(OriginalGrid);
+};
+
+void streaming(std::vector<std::vector<std::vector<float>>>& OriginalGrid){
+    std::vector<std::vector<std::vector<float>>> CopyGrid=OriginalGrid;
+    //top-bottom
+    for (int x=0;x<gridSize.first;x++){
+        for (int y=0;y<gridSize.second;y++){
+        if (y==0 || x==0 || y==gridSize.second-1){
+            if (y==0){
+                OriginalGrid[x][y][2]+=CopyGrid[x][y][8];
+                OriginalGrid[x][y][8]=0;
+                OriginalGrid[x][y][3]+=CopyGrid[x][y][7];
+                OriginalGrid[x][y][7]=0;
+                OriginalGrid[x][y][4]+=CopyGrid[x][y][6];
+                OriginalGrid[x][y][6]=0;
+            }
+            else if (y==gridSize.second-1){
+                OriginalGrid[x][y][8]+=CopyGrid[x][y][2];
+                OriginalGrid[x][y][2]=0;
+                OriginalGrid[x][y][7]+=CopyGrid[x][y][3];
+                OriginalGrid[x][y][3]=0;
+                OriginalGrid[x][y][6]+=CopyGrid[x][y][4];
+                OriginalGrid[x][y][4]=0;
+            };
+            if (x==0){
+                OriginalGrid[x][y][8]+=CopyGrid[x][y][6];
+                OriginalGrid[x][y][6]=0;
+                OriginalGrid[x][y][1]+=CopyGrid[x][y][5];
+                OriginalGrid[x][y][5]=0;
+                OriginalGrid[x][y][2]+=CopyGrid[x][y][4];
+                OriginalGrid[x][y][4]=0;
+            }
+            else if (x==gridSize.first-1){
+                OriginalGrid[x][y][6]=weights[6];
+                OriginalGrid[x][y][5]=weights[5];
+                OriginalGrid[x][y][4]=weights[4];
+            };}
+        else{
+            OriginalGrid[x][y][1]=CopyGrid[x-1][y][1];
+            OriginalGrid[x][y][2]=CopyGrid[x-1][y-1][2];
+            OriginalGrid[x][y][3]=CopyGrid[x][y-1][3];
+            OriginalGrid[x][y][4]=CopyGrid[x+1][y-1][4];
+            OriginalGrid[x][y][5]=CopyGrid[x+1][y][5];
+            OriginalGrid[x][y][6]=CopyGrid[x+1][y+1][6];
+            OriginalGrid[x][y][7]=CopyGrid[x][y+1][7];
+            OriginalGrid[x][y][8]=CopyGrid[x-1][y+1][8];
+        };
+            };
         };
     };
 
-};
 std::pair<float,float> velocityCalc(std::vector<float> cell){
     //add velocity calculator here.
-    return {0,0};
+    std::pair<float,float> velocity;
+    float sum =0;
+    float sumX =0;
+    float sumY =0;
+
+    for(int i=0; i<=8;i++){
+        sum+=cell[i];
+        sumX+=directions[i].first*cell[i];
+        sumY+=directions[i].second*cell[i];
+    };
+
+    velocity.first=(1/sum) * (sumX);
+    velocity.second=(1/sum) * (sumY); 
+
+    return velocity;
 };
