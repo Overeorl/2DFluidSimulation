@@ -183,7 +183,7 @@ void streaming(std::vector<std::vector<std::vector<float>>>& OriginalGrid){
                 OriginalGrid[x][y][7]=CopyGrid[x][y+1][7];
             };
             
-            if (x==0 && y==0){
+            if (x==0 && y==gridSize.second-1){
                 OriginalGrid[x][y][8]=CopyGrid[x][y][4];//left-bottom corner hit
             }else if (x==0){
                 OriginalGrid[x][y][8]=CopyGrid[x][y][6];//left wall hit
