@@ -2,6 +2,7 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <iostream>
+#include <random>
 
 //-------------------------//
 //Thoughts
@@ -25,12 +26,16 @@ float dotCalc(std::pair<float,float> num1,std::pair<float,float> num2);
 std::pair<int,int> gridPosCalculator(int,int);
 void updateLeft(std::pair<float,float>,std::vector<std::vector<std::vector<float>>>&);
 void updateGrid(std::vector<std::vector<std::vector<float>>>&);
+std::mt19937 rng(std::random_device{}());
 
-std::pair<int,int> WindowSize = {1200,1200};//x,y
+std::pair<int,int> WindowSize = {1200,600};//x,y
 std::pair<int,int> gridSize = {240,0};//x,y
 
+std::uniform_int_distribution<int> randomX(0, WindowSize.first-1);
+std::uniform_int_distribution<int> randomY(0, WindowSize.second-1);
+
 std::vector<std::pair<float,float>> directions = {{0,0},{1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1},{0,-1},{1,-1}};
-    std::vector<float> weights = {4.0/9,1.0/9,1.0/36,1.0/9,1.0/36,1.0/9,1.0/36,1.0/9,1.0/36};
+std::vector<float> weights = {4.0/9,1.0/9,1.0/36,1.0/9,1.0/36,1.0/9,1.0/36,1.0/9,1.0/36};
 
 
 int main(){
@@ -39,7 +44,7 @@ int main(){
     gridSize.second=gridSize.first*(WindowSize.second/WindowSize.first);
 
     //testShape
-    sf::CircleShape testShape(250.f);
+    sf::CircleShape testShape(150.f);
     testShape.setFillColor(sf::Color::White);
     testShape.setPointCount(48);
     testShape.setPosition((WindowSize.first/2)-testShape.getRadius(),(WindowSize.second/2)-testShape.getRadius());
@@ -50,8 +55,17 @@ int main(){
     //Cell Initialisation
     std::vector<std::vector<float>> row(gridSize.second, cell);//y
     std::vector<std::vector<std::vector<float>>> grid(gridSize.first, row);//x ----- (x,y,cell)
+    
+    sf::Texture texture;
+    sf::Sprite heatmap(texture);
 
     std::vector<std::pair<float,float>> particleLocations(PARTICLES);
+    for (int i; i<PARTICLES;i++){
+        do{
+            particleLocations[i].first=randomX(rng);
+            particleLocations[i].second=randomY(rng);
+        }while(false);//TODO - Add a function to check if particle is inside the object
+    };
 
 
     while (window.isOpen()){
@@ -77,11 +91,18 @@ int main(){
         //add here later
         if (started){updateLeft(startVelocity,grid);};
 
+        //heatmap(particleLocations)
+
 
         window.clear();
         window.draw(testShape);
+        window.draw(heatmap);
         window.display();
     };
+};
+
+void heatmap(std::vector<std::pair<float,float>>particleLocations){
+    
 };
 
 std::vector<float> eqFormula(std::pair<float,float> velocity){
